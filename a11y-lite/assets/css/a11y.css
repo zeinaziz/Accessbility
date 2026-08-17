@@ -1,0 +1,298 @@
+/*
+ * Accessibility Lite — frontend styles (~3.5 KB)
+ * Same features as the Pojo "One Click Accessibility" toolbar,
+ * without the 52 KB of duplicated selectors.
+ */
+
+/* Screen-reader only */
+.al-sr {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* Skip to content */
+.al-skip-link {
+	position: fixed;
+	top: -48px;
+	left: 8px;
+	z-index: 100000;
+	padding: 10px 16px;
+	background: #000;
+	color: #fff;
+	font-size: 14px;
+	text-decoration: none;
+	border-radius: 0 0 4px 4px;
+	transition: top .2s ease;
+}
+.al-skip-link:focus {
+	top: 0;
+	outline: 2px solid #ffd400;
+	outline-offset: 2px;
+}
+
+/* Toolbar */
+#al-toolbar {
+	position: fixed;
+	top: 20px;
+	z-index: 99999;
+	font-size: 16px;
+	line-height: 1.4;
+}
+#al-toolbar.al-right {
+	right: -180px;
+	transition: right .4s cubic-bezier(.23, 1, .32, 1);
+}
+#al-toolbar.al-right.al-open {
+	right: 0;
+}
+#al-toolbar.al-left {
+	left: -180px;
+	transition: left .4s cubic-bezier(.23, 1, .32, 1);
+}
+#al-toolbar.al-left.al-open {
+	left: 0;
+}
+/* --- Vertical position (vh, configurable) --- */
+#al-toolbar.al-vert-top {
+	top: calc(var(--al-vtop, 20) * 1vh);
+	bottom: auto;
+	transform: none;
+}
+#al-toolbar.al-vert-middle {
+	top: calc(var(--al-vtop, 50) * 1vh);
+	bottom: auto;
+	transform: translateY(-50%);
+}
+#al-toolbar.al-vert-bottom {
+	bottom: calc(var(--al-vtop, 15) * 1vh);
+	top: auto;
+	transform: none;
+}
+/* --- Vertical position on mobile (768px and below) --- */
+@media (max-width: 768px) {
+	#al-toolbar.al-vert-m-top {
+		top: calc(var(--al-vtop-m, 15) * 1vh);
+		bottom: auto;
+		transform: none;
+	}
+	#al-toolbar.al-vert-m-middle {
+		top: calc(var(--al-vtop-m, 50) * 1vh);
+		bottom: auto;
+		transform: translateY(-50%);
+	}
+	#al-toolbar.al-vert-m-bottom {
+		bottom: calc(var(--al-vtop-m, 15) * 1vh);
+		top: auto;
+		transform: none;
+	}
+}
+#al-toolbar .al-toggle {
+	position: absolute;
+	top: 0;
+}
+#al-toolbar.al-right .al-toggle {
+	right: 180px;
+}
+#al-toolbar.al-left .al-toggle {
+	left: 180px;
+}
+#al-toolbar .al-toggle button {
+	display: block;
+	padding: 10px 12px;
+	background: var(--al-accent, #164b74);
+	color: var(--al-accent-text, #fff);
+	border: 0;
+	cursor: pointer;
+	font-size: 22px;
+	line-height: 1;
+	box-shadow: 0 0 10px rgba(0, 0, 0, .15);
+}
+#al-toolbar .al-toggle button:focus {
+	outline: 2px solid currentColor;
+	outline-offset: -2px;
+}
+#al-toolbar .al-toggle svg {
+	display: block;
+	width: 1em;
+	height: 1em;
+}
+#al-toolbar .al-overlay {
+	width: 180px;
+	background: #fff;
+	color: #111;
+	border: 1px solid rgba(0, 0, 0, .15);
+	box-shadow: 0 0 10px rgba(0, 0, 0, .1);
+}
+#al-toolbar .al-title {
+	margin: 0;
+	padding: 12px 15px 6px;
+	font-weight: 700;
+}
+#al-toolbar .al-items {
+	list-style: none;
+	margin: 0;
+	padding: 0 0 8px;
+}
+#al-toolbar .al-item button {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 9px 15px;
+	background: none;
+	border: 0;
+	cursor: pointer;
+	font: inherit;
+	font-size: 13px;
+	color: inherit;
+	text-align: left;
+}
+#al-toolbar .al-item button:hover,
+#al-toolbar .al-item button:focus-visible {
+	background: rgba(0, 0, 0, .06);
+}
+#al-toolbar .al-item button.active {
+	font-weight: 700;
+	background: rgba(0, 0, 0, .1);
+}
+#al-toolbar .al-item svg {
+	flex: 0 0 auto;
+	width: 18px;
+	height: 18px;
+}
+#al-toolbar .al-item .al-txt {
+	vertical-align: middle;
+}
+
+/* --- Resize text (body.al-resize + --al-scale set by JS) --- */
+body.al-resize :is(p, li, label, input, select, textarea, legend, code, pre, dd, dt, span, blockquote, td, th) {
+	font-size: calc(100% * var(--al-scale, 1.2)) !important;
+}
+body.al-resize :is(h1, h2, h3, h4, h5, h6) {
+	font-size: calc(100% * var(--al-scale, 1.2) * 1.33) !important;
+}
+body.al-resize #al-toolbar,
+body.al-resize #al-toolbar * {
+	font-size: 16px !important;
+}
+
+/* --- Grayscale --- */
+body.al-grayscale {
+	filter: grayscale(100%);
+	-webkit-filter: grayscale(100%);
+}
+
+/* --- High contrast (compact replacement for the 30 KB selector list) --- */
+body.al-high-contrast,
+body.al-high-contrast * {
+	background-color: #000 !important;
+	color: #fff !important;
+	box-shadow: none !important;
+	text-shadow: none !important;
+	border-color: #888 !important;
+}
+body.al-high-contrast a,
+body.al-high-contrast a * {
+	color: #ff0 !important;
+	text-decoration: underline !important;
+}
+body.al-high-contrast :is(h1, h2, h3, h4, h5, h6) {
+	color: #40c090 !important;
+}
+body.al-high-contrast :is(b, strong) {
+	color: #ff0 !important;
+}
+body.al-high-contrast img {
+	background-color: #808080 !important;
+}
+body.al-high-contrast :is(button, input, textarea, select, table, td, th, tr) {
+	border: 1px solid #fff !important;
+}
+body.al-high-contrast button {
+	background-color: #600040 !important;
+	color: #fff !important;
+}
+body.al-high-contrast :focus {
+	outline: 2px solid #ff0 !important;
+	outline-offset: 2px;
+}
+body.al-high-contrast ::selection {
+	background-color: #4080c0 !important;
+}
+/* keep the toolbar usable (must come after the rules above) */
+body.al-high-contrast #al-toolbar,
+body.al-high-contrast #al-toolbar * {
+	background-color: #fff !important;
+	color: #111 !important;
+	border-color: rgba(0, 0, 0, .15) !important;
+	box-shadow: 0 0 10px rgba(0, 0, 0, .1) !important;
+}
+body.al-high-contrast #al-toolbar .al-toggle button {
+	background-color: var(--al-accent, #164b74) !important;
+	color: var(--al-accent-text, #fff) !important;
+}
+
+/* --- Negative contrast --- */
+body.al-negative-contrast,
+body.al-negative-contrast * {
+	background-color: #000 !important;
+	color: #fff !important;
+}
+body.al-negative-contrast :is(a, b, strong, blockquote),
+body.al-negative-contrast :is(a, b, strong, blockquote) * {
+	color: #ff0 !important;
+}
+body.al-negative-contrast :is(button, input, textarea, select, table, td, th, tr) {
+	border: 1px solid #fff !important;
+}
+body.al-negative-contrast #al-toolbar,
+body.al-negative-contrast #al-toolbar * {
+	background-color: #fff !important;
+	color: #111 !important;
+	border-color: rgba(0, 0, 0, .15) !important;
+	box-shadow: 0 0 10px rgba(0, 0, 0, .1) !important;
+}
+body.al-negative-contrast #al-toolbar .al-toggle button {
+	background-color: var(--al-accent, #164b74) !important;
+	color: var(--al-accent-text, #fff) !important;
+}
+
+/* --- Light background --- */
+body.al-light-bg,
+body.al-light-bg * {
+	background-color: #fff !important;
+	color: #000 !important;
+}
+body.al-light-bg #al-toolbar {
+	background-color: #fff !important;
+	color: #111 !important;
+}
+body.al-light-bg #al-toolbar .al-toggle button {
+	background-color: var(--al-accent, #164b74) !important;
+	color: var(--al-accent-text, #fff) !important;
+}
+
+/* --- Links underline --- */
+body.al-links-underline a,
+body.al-links-underline a * {
+	text-decoration: underline !important;
+}
+
+/* --- Readable font --- */
+body.al-readable-font,
+body.al-readable-font :not(i):not(span):not(svg):not(path) {
+	font-family: Verdana, Arial, Helvetica, sans-serif !important;
+}
+
+/* --- Visible focus outline (global option) --- */
+body.al-focusable :focus {
+	outline: 2px solid #005fcc !important;
+	outline-offset: 2px;
+}
