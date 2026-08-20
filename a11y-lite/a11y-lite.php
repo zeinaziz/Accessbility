@@ -3,7 +3,7 @@
  * Plugin Name:       Accessibility Lite
  * Plugin URI:        https://fanaloka.co
  * Description:       Lightweight accessibility toolbar. Vanilla JS, no jQuery, ~5 KB of CSS + JS. Text resize, grayscale, contrast modes, links underline, readable font and reset — the same features as the bloated Pojo/Elementor toolbar, without the bloat.
- * Version:           1.0.2
+ * Version:           1.1.0
  * Requires at least: 5.2
  * Requires PHP:      7.0
  * Author:            Fanaloka
@@ -15,9 +15,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'AL_VERSION', '1.0.2' );
+define( 'AL_VERSION', '1.1.0' );
 define( 'AL_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'AL_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+
+require AL_PLUGIN_DIR . 'plugin-update-checker/plugin-update-checker.php';
+
+use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+
+$al_update_checker = PucFactory::buildUpdateChecker(
+	'https://github.com/zeinaziz/Accessbility/',
+	__FILE__,
+	'a11y-lite'
+);
+$al_update_checker->getVcsApi()->enableReleaseAssets();
 
 final class Accessibility_Lite {
 
