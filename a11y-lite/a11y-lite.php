@@ -35,6 +35,7 @@ final class Accessibility_Lite {
 			require_once AL_PLUGIN_DIR . 'admin.php';
 			add_action( 'admin_menu', array( 'Accessibility_Lite_Admin', 'menu' ) );
 			add_action( 'admin_init', array( 'Accessibility_Lite_Admin', 'register' ) );
+			add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( $this, 'action_links' ) );
 			return;
 		}
 		add_action( 'wp_body_open', array( $this, 'print_toolbar' ), 1 );
@@ -42,22 +43,46 @@ final class Accessibility_Lite {
 		add_filter( 'body_class', array( $this, 'body_class' ) );
 	}
 
+	public function action_links( $links ) {
+		$settings_link = '<a href="' . esc_url( admin_url( 'options-general.php?page=a11y-lite' ) ) . '">' . esc_html__( 'Settings', 'a11y-lite' ) . '</a>';
+		array_unshift( $links, $settings_link );
+		return $links;
+	}
+
 	public function options() {
 		$defaults = array(
-			'position'        => 'right',
-			'accent'          => '#164b74',
-			'accent_text'     => '#ffffff',
-			'vpos_desktop'    => 'middle',
-			'vpos_desktop_vh' => 50,
-			'vpos_mobile'     => 'bottom',
-			'vpos_mobile_vh'  => 15,
-			'features'        => array( 'resize', 'grayscale', 'high-contrast', 'negative-contrast', 'light-bg', 'links-underline', 'readable-font' ),
-			'skip_link'       => 1,
-			'focusable'       => 1,
-			'save'            => 1,
-			'save_exp'        => 720,
+			'position'           => 'right',
+			'accent'             => '#164b74',
+			'accent_text'        => '#ffffff',
+			'vpos_desktop'       => 'middle',
+			'vpos_desktop_vh'    => 50,
+			'vpos_mobile'        => 'bottom',
+			'vpos_mobile_vh'     => 15,
+			'features'           => array( 'resize', 'grayscale', 'high-contrast', 'negative-contrast', 'light-bg', 'links-underline', 'readable-font' ),
+			'skip_link'          => 1,
+			'skip_target'        => 'content',
+			'focusable'          => 1,
+			'save'               => 1,
+			'save_exp'           => 720,
+			'exclude_post_types' => array(),
+			'exclude_ids'        => array(),
 		);
 		return wp_parse_args( get_option( 'al_a11y_options', array() ), $defaults );
+	}
+
+	private function is_excluded( $o ) {
+		if ( ! empty( $o['exclude_post_types'] ) ) {
+			if ( is_singular( $o['exclude_post_types'] ) || is_post_type_archive( $o['exclude_post_types'] ) ) {
+				return true;
+			}
+		}
+		if ( ! empty( $o['exclude_ids'] ) ) {
+			$id = get_queried_object_id();
+			if ( $id && in_array( $id, $o['exclude_ids'], true ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public function body_class( $classes ) {
@@ -69,12 +94,17 @@ final class Accessibility_Lite {
 	}
 
 	public function assets() {
+		$o = $this->options();
+		if ( $this->is_excluded( $o ) ) {
+			return;
+		}
 		wp_enqueue_style( 'al-a11y', AL_PLUGIN_URL . 'assets/css/a11y.css', array(), AL_VERSION );
 		wp_enqueue_script( 'al-a11y', AL_PLUGIN_URL . 'assets/js/a11y.js', array(), AL_VERSION, true );
-		$o = $this->options();
 		wp_localize_script( 'al-a11y', 'AlA11yOpts', array(
-			'save'    => empty( $o['save'] ) ? '0' : '1',
-			'saveExp' => (string) absint( $o['save_exp'] ),
+			'save'       => empty( $o['save'] ) ? '0' : '1',
+			'saveExp'    => (string) absint( $o['save_exp'] ),
+			'openLabel'  => __( 'Open toolbar', 'a11y-lite' ),
+			'closeLabel' => __( 'Close toolbar', 'a11y-lite' ),
 		) );
 	}
 
@@ -87,8 +117,17 @@ final class Accessibility_Lite {
 
 		$o = $this->options();
 
+		if ( $this->is_excluded( $o ) ) {
+			return;
+		}
+
 		if ( ! empty( $o['skip_link'] ) ) {
-			echo '<a class="al-skip-link" href="#content" accesskey="s">' . esc_html__( 'Skip to content', 'a11y-lite' ) . '</a>';
+			$target = ! empty( $o['skip_target'] ) ? $o['skip_target'] : 'content';
+			printf(
+				'<a class="al-skip-link" href="#%1$s" accesskey="s">%2$s</a>',
+				esc_attr( $target ),
+				esc_html__( 'Skip to content', 'a11y-lite' )
+			);
 		}
 
 		$items = $this->toolbar_items( $o['features'] );
@@ -99,8 +138,8 @@ final class Accessibility_Lite {
 		$pos  = ( 'left' === $o['position'] ) ? 'al-left' : 'al-right';
 		$vpos = in_array( $o['vpos_desktop'], array( 'top', 'middle', 'bottom' ), true ) ? $o['vpos_desktop'] : 'middle';
 		$vmob = in_array( $o['vpos_mobile'], array( 'top', 'middle', 'bottom' ), true ) ? $o['vpos_mobile'] : 'bottom';
-		$vh   = min( 100, max( 0, absint( $o['vpos_desktop_vh'] ) ) );
-		$vhm  = min( 100, max( 0, absint( $o['vpos_mobile_vh'] ) ) );
+		$vh   = min( 100, max( 0, intval( $o['vpos_desktop_vh'] ) ) );
+		$vhm  = min( 100, max( 0, intval( $o['vpos_mobile_vh'] ) ) );
 		$pos .= ' al-vert-' . $vpos . ' al-vert-m-' . $vmob;
 
 		printf(

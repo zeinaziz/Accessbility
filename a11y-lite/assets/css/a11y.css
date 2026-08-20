@@ -152,7 +152,7 @@
 	font: inherit;
 	font-size: 13px;
 	color: inherit;
-	text-align: left;
+	text-align: start;
 }
 #al-toolbar .al-item button:hover,
 #al-toolbar .al-item button:focus-visible {
@@ -184,9 +184,17 @@ body.al-resize #al-toolbar * {
 }
 
 /* --- Grayscale --- */
-body.al-grayscale {
-	filter: grayscale(100%);
-	-webkit-filter: grayscale(100%);
+/* A `filter` on body creates a new containing block for position:fixed/sticky
+   descendants (breaks sticky headers and our own toolbar), so desaturate via
+   a blend-mode overlay instead of `filter: grayscale()`. */
+body.al-grayscale::after {
+	content: '';
+	position: fixed;
+	inset: 0;
+	background: #808080;
+	mix-blend-mode: saturation;
+	pointer-events: none;
+	z-index: 2147483647;
 }
 
 /* --- High contrast (compact replacement for the 30 KB selector list) --- */

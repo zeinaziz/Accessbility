@@ -9,14 +9,30 @@
 	var MAX = 200;
 	var STEP = 10;
 
+	var opts = window.AlA11yOpts || {};
+
+	var skipLink = document.querySelector('.al-skip-link');
+	if (skipLink) {
+		var targetId = (skipLink.getAttribute('href') || '').replace('#', '');
+		if (targetId && !document.getElementById(targetId)) {
+			var fallback = document.querySelector('main, [role="main"], #main, #primary');
+			if (fallback) {
+				if (!fallback.id) {
+					fallback.id = 'al-content-fallback';
+				}
+				skipLink.setAttribute('href', '#' + fallback.id);
+			}
+		}
+	}
+
 	var toolbar = document.getElementById('al-toolbar');
 	if (!toolbar) {
 		return;
 	}
 
 	var body = document.body;
-	var opts = window.AlA11yOpts || {};
 	var toggleBtn = toolbar.querySelector('.al-toggle button');
+	var toggleSr = toggleBtn.querySelector('.al-sr');
 	var active = {};
 	var scale = MIN;
 	var schema = null;
@@ -151,11 +167,17 @@
 	function openToolbar() {
 		toolbar.classList.add('al-open');
 		toggleBtn.setAttribute('aria-expanded', 'true');
+		if (toggleSr && opts.closeLabel) {
+			toggleSr.textContent = opts.closeLabel;
+		}
 	}
 
 	function closeToolbar() {
 		toolbar.classList.remove('al-open');
 		toggleBtn.setAttribute('aria-expanded', 'false');
+		if (toggleSr && opts.openLabel) {
+			toggleSr.textContent = opts.openLabel;
+		}
 	}
 
 	var SCHEMA_ACTIONS = ['grayscale', 'high-contrast', 'negative-contrast', 'light-bg'];
