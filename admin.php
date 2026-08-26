@@ -88,6 +88,8 @@ class Accessibility_Lite_Admin {
 			$out['exclude_ids'] = array_values( array_unique( $out['exclude_ids'] ) );
 		}
 
+		$out['custom_css'] = ! empty( $in['custom_css'] ) ? wp_strip_all_tags( $in['custom_css'] ) : '';
+
 		return $out;
 	}
 
@@ -195,6 +197,13 @@ class Accessibility_Lite_Admin {
 								<input type="text" name="<?php echo esc_attr( self::OPTION ); ?>[exclude_ids]" value="<?php echo esc_attr( implode( ', ', $o['exclude_ids'] ) ); ?>" style="width:260px" placeholder="12, 45, 100" />
 							</label>
 							<p class="description"><?php esc_html_e( 'Comma-separated. Hides the toolbar on these specific posts/pages regardless of type.', 'a11y-lite' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Custom CSS', 'a11y-lite' ); ?></th>
+						<td>
+							<textarea name="<?php echo esc_attr( self::OPTION ); ?>[custom_css]" rows="8" style="width:100%;max-width:600px;font-family:Consolas,Monaco,monospace" placeholder="#al-toolbar { z-index: 999999; }"><?php echo esc_textarea( $o['custom_css'] ); ?></textarea>
+							<p class="description"><?php esc_html_e( 'Extra CSS loaded after the toolbar\'s own styles, for overriding things a specific theme conflicts with (e.g. #al-toolbar, .al-overlay, .al-toggle button). No <style> tags needed — just the rules.', 'a11y-lite' ); ?></p>
 						</td>
 					</tr>
 				</table>
