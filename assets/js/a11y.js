@@ -23,6 +23,11 @@
 				skipLink.setAttribute('href', '#' + fallback.id);
 			}
 		}
+		// On themes without wp_body_open, PHP falls back to printing at wp_footer —
+		// move it back to the first tab stop so accesskey="s" still skips past the whole page.
+		if (document.body.firstChild !== skipLink) {
+			document.body.insertBefore(skipLink, document.body.firstChild);
+		}
 	}
 
 	var toolbar = document.getElementById('al-toolbar');

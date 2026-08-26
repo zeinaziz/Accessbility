@@ -3,7 +3,7 @@
  * Plugin Name:       Accessibility Lite
  * Plugin URI:        https://fanaloka.co
  * Description:       Lightweight accessibility toolbar. Vanilla JS, no jQuery, ~5 KB of CSS + JS. Text resize, grayscale, contrast modes, links underline, readable font and reset — the same features as the bloated Pojo/Elementor toolbar, without the bloat.
- * Version:           1.1.1
+ * Version:           1.1.2
  * Requires at least: 5.2
  * Requires PHP:      7.0
  * Author:            Fanaloka
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'AL_VERSION', '1.1.1' );
+define( 'AL_VERSION', '1.1.2' );
 define( 'AL_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'AL_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -50,6 +50,8 @@ final class Accessibility_Lite {
 			return;
 		}
 		add_action( 'wp_body_open', array( $this, 'print_toolbar' ), 1 );
+		// wp_body_open is opt-in; themes that never added the call would otherwise never render the toolbar.
+		add_action( 'wp_footer', array( $this, 'print_toolbar' ), 100 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'assets' ) );
 		add_filter( 'body_class', array( $this, 'body_class' ) );
 	}
