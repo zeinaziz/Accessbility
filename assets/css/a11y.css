@@ -38,70 +38,99 @@
 }
 
 /* Toolbar */
+/* --al-tx/--al-ty let the horizontal slide and the vertical position rules
+   below each own one axis without one wiping out the other's `transform`
+   (two selectors of equal specificity can't both set `transform` and have
+   it combine — the later rule replaces it outright). */
 #al-toolbar {
 	position: fixed;
 	top: 20px;
 	z-index: 99999;
 	font-size: 16px;
 	line-height: 1.4;
+	--al-tx: 0px;
+	--al-ty: 0px;
+	transform: translate(var(--al-tx), var(--al-ty));
+	transition: transform .35s cubic-bezier(.25, .8, .25, 1);
+	will-change: transform;
 }
 #al-toolbar.al-right {
-	right: -180px;
-	transition: right .4s cubic-bezier(.23, 1, .32, 1);
+	right: 0;
+	--al-tx: 180px;
 }
 #al-toolbar.al-right.al-open {
-	right: 0;
+	--al-tx: 0px;
 }
 #al-toolbar.al-left {
-	left: -180px;
-	transition: left .4s cubic-bezier(.23, 1, .32, 1);
+	left: 0;
+	--al-tx: -180px;
 }
 #al-toolbar.al-left.al-open {
-	left: 0;
+	--al-tx: 0px;
+}
+#al-toolbar:not(.al-open) .al-overlay {
+	pointer-events: none;
 }
 /* --- Vertical position (vh, configurable) --- */
 #al-toolbar.al-vert-top {
 	top: calc(var(--al-vtop, 20) * 1vh);
 	bottom: auto;
-	transform: none;
+	--al-ty: 0px;
 }
 #al-toolbar.al-vert-middle {
 	top: calc(var(--al-vtop, 50) * 1vh);
 	bottom: auto;
-	transform: translateY(-50%);
+	--al-ty: -50%;
 }
 #al-toolbar.al-vert-bottom {
 	bottom: calc(var(--al-vtop, 15) * 1vh);
 	top: auto;
-	transform: none;
+	--al-ty: 0px;
 }
 /* --- Vertical position on mobile (768px and below) --- */
 @media (max-width: 768px) {
 	#al-toolbar.al-vert-m-top {
 		top: calc(var(--al-vtop-m, 15) * 1vh);
 		bottom: auto;
-		transform: none;
+		--al-ty: 0px;
 	}
 	#al-toolbar.al-vert-m-middle {
 		top: calc(var(--al-vtop-m, 50) * 1vh);
 		bottom: auto;
-		transform: translateY(-50%);
+		--al-ty: -50%;
 	}
 	#al-toolbar.al-vert-m-bottom {
 		bottom: calc(var(--al-vtop-m, 15) * 1vh);
 		top: auto;
-		transform: none;
+		--al-ty: 0px;
 	}
 }
 #al-toolbar .al-toggle {
 	position: absolute;
 	top: 0;
+	transition: transform .35s cubic-bezier(.25, .8, .25, 1);
+	will-change: transform;
 }
+/* 1px overlap onto the overlay's edge (instead of touching exactly) — the
+   .al-toggle box always paints above the unpositioned .al-overlay, so the
+   overlap is invisible, but it hides any subpixel rounding gap that would
+   otherwise show up as a hairline through to whatever is behind the toolbar.
+   The transform below only cancels the parent's horizontal --al-tx (180px,
+   matching the slide distance) — the 179px `right` is just the static
+   anchor for the overlap and isn't part of that cancellation. */
 #al-toolbar.al-right .al-toggle {
-	right: 180px;
+	right: 179px;
+	transform: translateX(-180px);
+}
+#al-toolbar.al-right.al-open .al-toggle {
+	transform: translateX(0);
 }
 #al-toolbar.al-left .al-toggle {
-	left: 180px;
+	left: 179px;
+	transform: translateX(180px);
+}
+#al-toolbar.al-left.al-open .al-toggle {
+	transform: translateX(0);
 }
 #al-toolbar .al-toggle button {
 	display: block;
@@ -124,6 +153,7 @@
 	height: 1em;
 }
 #al-toolbar .al-overlay {
+	box-sizing: border-box;
 	width: 180px;
 	background: #fff;
 	color: #111;
@@ -132,8 +162,10 @@
 }
 #al-toolbar .al-title {
 	margin: 0;
-	padding: 12px 15px 6px;
+	padding: 12px 15px;
 	font-weight: 700;
+	background: var(--al-accent, #164b74);
+	color: var(--al-accent-text, #fff);
 }
 #al-toolbar .al-items {
 	list-style: none;
@@ -148,6 +180,7 @@
 	padding: 9px 15px;
 	background: none;
 	border: 0;
+	border-inline-start: 3px solid transparent;
 	cursor: pointer;
 	font: inherit;
 	font-size: 13px;
@@ -161,6 +194,7 @@
 #al-toolbar .al-item button.active {
 	font-weight: 700;
 	background: rgba(0, 0, 0, .1);
+	border-inline-start-color: var(--al-accent, #164b74);
 }
 #al-toolbar .al-item svg {
 	flex: 0 0 auto;
@@ -242,7 +276,8 @@ body.al-high-contrast #al-toolbar * {
 	border-color: rgba(0, 0, 0, .15) !important;
 	box-shadow: 0 0 10px rgba(0, 0, 0, .1) !important;
 }
-body.al-high-contrast #al-toolbar .al-toggle button {
+body.al-high-contrast #al-toolbar .al-toggle button,
+body.al-high-contrast #al-toolbar .al-title {
 	background-color: var(--al-accent, #164b74) !important;
 	color: var(--al-accent-text, #fff) !important;
 }
@@ -267,7 +302,8 @@ body.al-negative-contrast #al-toolbar * {
 	border-color: rgba(0, 0, 0, .15) !important;
 	box-shadow: 0 0 10px rgba(0, 0, 0, .1) !important;
 }
-body.al-negative-contrast #al-toolbar .al-toggle button {
+body.al-negative-contrast #al-toolbar .al-toggle button,
+body.al-negative-contrast #al-toolbar .al-title {
 	background-color: var(--al-accent, #164b74) !important;
 	color: var(--al-accent-text, #fff) !important;
 }
@@ -282,7 +318,8 @@ body.al-light-bg #al-toolbar {
 	background-color: #fff !important;
 	color: #111 !important;
 }
-body.al-light-bg #al-toolbar .al-toggle button {
+body.al-light-bg #al-toolbar .al-toggle button,
+body.al-light-bg #al-toolbar .al-title {
 	background-color: var(--al-accent, #164b74) !important;
 	color: var(--al-accent-text, #fff) !important;
 }
