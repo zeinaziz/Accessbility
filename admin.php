@@ -37,6 +37,10 @@ class Accessibility_Lite_Admin {
 		register_setting( 'al_a11y', self::OPTION, array( __CLASS__, 'sanitize' ) );
 	}
 
+	private static function text( $in, $key ) {
+		return ( isset( $in[ $key ] ) && is_string( $in[ $key ] ) ) ? $in[ $key ] : '';
+	}
+
 	public static function sanitize( $in ) {
 		$in    = is_array( $in ) ? $in : array();
 		$out   = array();
@@ -47,20 +51,20 @@ class Accessibility_Lite_Admin {
 		$out['vpos_mobile']     = ( isset( $in['vpos_mobile'] ) && in_array( $in['vpos_mobile'], array( 'top', 'middle', 'bottom' ), true ) ) ? $in['vpos_mobile'] : 'bottom';
 		$out['vpos_mobile_vh']  = isset( $in['vpos_mobile_vh'] ) ? intval( $in['vpos_mobile_vh'] ) : 15;
 		$out['vpos_mobile_vh']  = min( 100, max( 0, $out['vpos_mobile_vh'] ) );
-		$out['accent']      = ! empty( $in['accent'] ) ? sanitize_hex_color( $in['accent'] ) : '';
+		$out['accent']      = sanitize_hex_color( self::text( $in, 'accent' ) );
 		$out['accent']      = $out['accent'] ? $out['accent'] : '#164b74';
-		$out['accent_text'] = ! empty( $in['accent_text'] ) ? sanitize_hex_color( $in['accent_text'] ) : '';
+		$out['accent_text'] = sanitize_hex_color( self::text( $in, 'accent_text' ) );
 		$out['accent_text'] = $out['accent_text'] ? $out['accent_text'] : '#ffffff';
 		$out['features']    = array();
 		if ( ! empty( $in['features'] ) && is_array( $in['features'] ) ) {
 			foreach ( $in['features'] as $f ) {
-				if ( array_key_exists( $f, self::$features ) ) {
+				if ( is_string( $f ) && array_key_exists( $f, self::$features ) ) {
 					$out['features'][] = $f;
 				}
 			}
 		}
 		$out['skip_link']   = empty( $in['skip_link'] ) ? 0 : 1;
-		$out['skip_target'] = ! empty( $in['skip_target'] ) ? sanitize_html_class( ltrim( trim( $in['skip_target'] ), '#' ) ) : '';
+		$out['skip_target'] = sanitize_html_class( ltrim( trim( self::text( $in, 'skip_target' ) ), '#' ) );
 		$out['skip_target'] = $out['skip_target'] ? $out['skip_target'] : 'content';
 		$out['focusable']   = empty( $in['focusable'] ) ? 0 : 1;
 		$out['save']      = empty( $in['save'] ) ? 0 : 1;
@@ -79,7 +83,9 @@ class Accessibility_Lite_Admin {
 
 		$out['exclude_ids'] = array();
 		if ( ! empty( $in['exclude_ids'] ) ) {
-			foreach ( preg_split( '/[\s,]+/', (string) $in['exclude_ids'] ) as $id ) {
+			// WordPress runs this callback twice on the first save, so the input can already be an array.
+			$ids = is_array( $in['exclude_ids'] ) ? $in['exclude_ids'] : preg_split( '/[\s,]+/', (string) $in['exclude_ids'] );
+			foreach ( $ids as $id ) {
 				$id = absint( $id );
 				if ( $id ) {
 					$out['exclude_ids'][] = $id;
@@ -88,7 +94,13 @@ class Accessibility_Lite_Admin {
 			$out['exclude_ids'] = array_values( array_unique( $out['exclude_ids'] ) );
 		}
 
-		$out['custom_css'] = ! empty( $in['custom_css'] ) ? wp_strip_all_tags( $in['custom_css'] ) : '';
+		// Same capability core requires for Additional CSS: on multisite or with
+		// DISALLOW_UNFILTERED_HTML, manage_options alone must not allow site-wide CSS.
+		if ( current_user_can( 'edit_css' ) ) {
+			$out['custom_css'] = wp_strip_all_tags( self::text( $in, 'custom_css' ) );
+		} else {
+			$out['custom_css'] = self::text( (array) get_option( self::OPTION, array() ), 'custom_css' );
+		}
 
 		return $out;
 	}
@@ -202,8 +214,11 @@ class Accessibility_Lite_Admin {
 					<tr>
 						<th scope="row"><?php esc_html_e( 'Custom CSS', 'a11y-lite' ); ?></th>
 						<td>
-							<textarea name="<?php echo esc_attr( self::OPTION ); ?>[custom_css]" rows="8" style="width:100%;max-width:600px;font-family:Consolas,Monaco,monospace" placeholder="#al-toolbar { z-index: 999999; }"><?php echo esc_textarea( $o['custom_css'] ); ?></textarea>
+							<textarea name="<?php echo esc_attr( self::OPTION ); ?>[custom_css]" rows="8" style="width:100%;max-width:600px;font-family:Consolas,Monaco,monospace" placeholder="#al-toolbar { z-index: 999999; }"<?php echo current_user_can( 'edit_css' ) ? '' : ' readonly'; ?>><?php echo esc_textarea( $o['custom_css'] ); ?></textarea>
 							<p class="description"><?php esc_html_e( 'Extra CSS loaded after the toolbar\'s own styles, for overriding things a specific theme conflicts with (e.g. #al-toolbar, .al-overlay, .al-toggle button). No <style> tags needed — just the rules.', 'a11y-lite' ); ?></p>
+							<?php if ( ! current_user_can( 'edit_css' ) ) : ?>
+								<p class="description"><?php esc_html_e( 'Read-only: your account does not have permission to edit CSS on this site.', 'a11y-lite' ); ?></p>
+							<?php endif; ?>
 						</td>
 					</tr>
 				</table>

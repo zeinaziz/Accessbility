@@ -158,9 +158,9 @@
 				return;
 			}
 			var a = d.actions || {};
-			scale = Math.min(MAX, Math.max(MIN, d.scale || MIN));
+			scale = Math.min(MAX, Math.max(MIN, parseInt(d.scale, 10) || MIN));
 			applyScale();
-			if (d.schema && a[d.schema]) {
+			if (SCHEMA_ACTIONS.indexOf(d.schema) !== -1 && a[d.schema]) {
 				setSchema(d.schema);
 			}
 			['links-underline', 'readable-font'].forEach(function (k) {

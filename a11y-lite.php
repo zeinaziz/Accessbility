@@ -3,9 +3,10 @@
  * Plugin Name:       Accessibility Lite
  * Plugin URI:        https://fanaloka.co
  * Description:       Lightweight accessibility toolbar. Vanilla JS, no jQuery, ~5 KB of CSS + JS. Text resize, grayscale, contrast modes, links underline, readable font and reset — the same features as the bloated Pojo/Elementor toolbar, without the bloat.
- * Version:           1.2.4
+ * Version:           1.2.5
  * Requires at least: 5.2
  * Requires PHP:      7.0
+ * Update URI:        https://github.com/zeinaziz/Accessbility
  * Author:            Fanaloka
  * License:           GPL-2.0-or-later
  * Text Domain:       a11y-lite
@@ -15,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'AL_VERSION', '1.2.4' );
+define( 'AL_VERSION', '1.2.5' );
 define( 'AL_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'AL_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -81,7 +82,25 @@ final class Accessibility_Lite {
 			'exclude_ids'        => array(),
 			'custom_css'         => '',
 		);
-		return wp_parse_args( get_option( 'al_a11y_options', array() ), $defaults );
+		$saved = get_option( 'al_a11y_options', array() );
+		$o     = wp_parse_args( is_array( $saved ) ? $saved : array(), $defaults );
+
+		// Stored values can bypass Accessibility_Lite_Admin::sanitize() (WP-CLI, imports, DB edits).
+		foreach ( array( 'features', 'exclude_post_types', 'exclude_ids' ) as $key ) {
+			if ( ! is_array( $o[ $key ] ) ) {
+				$o[ $key ] = $defaults[ $key ];
+			}
+		}
+		$o['exclude_ids'] = array_map( 'absint', $o['exclude_ids'] );
+		foreach ( array( 'accent', 'accent_text' ) as $key ) {
+			$color     = is_string( $o[ $key ] ) ? sanitize_hex_color( $o[ $key ] ) : '';
+			$o[ $key ] = $color ? $color : $defaults[ $key ];
+		}
+		$target           = is_string( $o['skip_target'] ) ? sanitize_html_class( $o['skip_target'] ) : '';
+		$o['skip_target'] = $target ? $target : $defaults['skip_target'];
+		$o['custom_css']  = is_string( $o['custom_css'] ) ? $o['custom_css'] : '';
+
+		return $o;
 	}
 
 	private function is_excluded( $o ) {
@@ -114,7 +133,7 @@ final class Accessibility_Lite {
 		}
 		wp_enqueue_style( 'al-a11y', AL_PLUGIN_URL . 'assets/css/a11y.css', array(), AL_VERSION );
 		if ( ! empty( $o['custom_css'] ) ) {
-			wp_add_inline_style( 'al-a11y', $o['custom_css'] );
+			wp_add_inline_style( 'al-a11y', wp_strip_all_tags( $o['custom_css'] ) );
 		}
 		wp_enqueue_script( 'al-a11y', AL_PLUGIN_URL . 'assets/js/a11y.js', array(), AL_VERSION, true );
 		wp_localize_script( 'al-a11y', 'AlA11yOpts', array(

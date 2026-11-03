@@ -61,7 +61,7 @@ A few things that aren't obvious from the CSS alone, learned the hard way while 
 
 - **The toggle button is deliberately attached to the panel** (it lives inside `.al-slide`, so it slides with the panel and ends up on the panel's open edge) rather than staying static like some other toolbars (e.g. Pojo's, which is a separate sibling element that never moves). This was a conscious design decision — don't "fix" it by giving the toggle its own counter-transform to keep it static; that was tried and explicitly reverted.
 
-- Custom CSS is sanitized with `wp_strip_all_tags()` on save and rendered with `esc_textarea()` — safe against `<script>`/tag injection, but the field itself requires `manage_options` (admin-only) to edit, same trust boundary as any other admin settings field.
+- Custom CSS is stripped with `wp_strip_all_tags()` on save and again before output, and rendered in the form with `esc_textarea()`. Editing it requires the `edit_css` capability, the same one core uses for Additional CSS. On multisite (non-super-admins) or with `DISALLOW_UNFILTERED_HTML`, the field is read-only and the saved CSS is kept.
 
 ## Architecture notes for future developers
 
@@ -94,6 +94,14 @@ assets/css/a11y.css     # ~3.5 KB, all toolbar + feature styles
 assets/js/a11y.js       # ~3 KB, vanilla JS, no dependencies
 plugin-update-checker/  # bundled third-party library (YahnisElsts), do not edit
 ```
+
+## Security notes
+
+- **Updates are the highest-risk path.** Every site installs whatever is published as a release on this repo, with no signature check, so write access to the repo amounts to code execution on all of those sites. Keep 2FA on every account with write access, and protect `main` and release tags.
+- **Keep the `Update URI` header.** It stops WordPress from offering a same-named plugin from WordPress.org as an update to this one. It requires WP 5.8+ and is ignored on older versions.
+- **Don't trust stored options at output.** `register_setting()` sanitization only runs through wp-admin, so WP-CLI, imports and DB edits bypass it. `Accessibility_Lite::options()` re-validates types and values. Add new settings there as well as in `sanitize()`.
+- **`sanitize()` must be idempotent.** WordPress runs it twice the first time the option is saved, so it can receive its own output.
+- **Treat `localStorage` as untrusted input** in `assets/js/a11y.js`: check values against a whitelist before using them in selectors or class names.
 
 ## Compatibility
 
